@@ -6,7 +6,6 @@ document.addEventListener('DOMContentLoaded', function() {
   document.querySelector('#archived')?.addEventListener('click', () => load_mailbox('archive'));
   document.querySelector('#compose')?.addEventListener('click', compose_email);
   document.querySelector('#compose_submit')?.addEventListener('click', () => send_email());
-  document.querySelector('#email-view')?.addEventListener('click', () => open_email(22))
 
   
   // By default, load the inbox
@@ -32,6 +31,8 @@ function compose_email() {
 }
 
 function load_mailbox(mailbox) {
+
+  console.log(mailbox);
   
   // Show the mailbox and hide other views
   document.querySelector('#emails-view').style.display = 'block';
@@ -63,20 +64,36 @@ function load_mailbox(mailbox) {
     emails_view.innerHTML += `</div>`;
 
    
-
     for(let i = 0; i < emails.length; i++){
 
-      emails_view.innerHTML += `<div class="row border" onclick="open_email(${emails[i].id})"  id="email${i}">`;
-      let email = document.querySelector('#email' + i);
-      if(mailbox != 'sent'){
-        email.innerHTML += `<div class="col-4"><h5>${emails[i].sender}</h5></div>`;
+
+      if(emails[i].read === true){
+        emails_view.innerHTML += `<div class="row border read" onclick="open_email(${emails[i].id}, '${mailbox}')"  id="email${i}">`;
+        let email = document.querySelector('#email' + i);
+        if(mailbox != 'sent'){
+          email.innerHTML += `<div class="col-4"><h5>${emails[i].sender}</h5></div>`;
+        }
+        else{
+          email.innerHTML += `<div class="col-4"><h5>${emails[i].recipients}</h5></div>`
+        }
+        email.innerHTML += `<div class="col-4">${emails[i].subject}</div>`;
+        email.innerHTML += `<div class="col-4">${emails[i].timestamp}</div>`;
+        emails_view.innerHTML += `</div>`;  
       }
+
       else{
-        email.innerHTML += `<div class="col-4"><h5>${emails[i].recipients}</h5></div>`
+        emails_view.innerHTML += `<div class="row border" onclick="open_email(${emails[i].id}, '${mailbox}')"  id="email${i}">`;
+        let email = document.querySelector('#email' + i);
+        if(mailbox != 'sent'){
+          email.innerHTML += `<div class="col-4"><h5>${emails[i].sender}</h5></div>`;
+        }
+        else{
+          email.innerHTML += `<div class="col-4"><h5>${emails[i].recipients}</h5></div>`
+        }
+        email.innerHTML += `<div class="col-4">${emails[i].subject}</div>`;
+        email.innerHTML += `<div class="col-4">${emails[i].timestamp}</div>`;
+        emails_view.innerHTML += `</div>`;  
       }
-      email.innerHTML += `<div class="col-4">${emails[i].subject}</div>`;
-      email.innerHTML += `<div class="col-4">${emails[i].timestamp}</div>`;
-      emails_view.innerHTML += `</div>`;  
     }
 
     
@@ -109,19 +126,22 @@ function send_email(){
   load_mailbox('sent');
 }
 
-function open_email(email_id){
+function open_email(email_id, mailbox){
 
   document.querySelector('#compose-view').style.display = 'none';
   document.querySelector('#emails-view').style.display = 'block';
   document.querySelector('#email-view').style.display = 'none';
- 
+  console.log(mailbox)
 
   fetch(`/emails/${email_id}`)
   .then(response => response.json())
   .then(email =>{
      // Show the email title name
+    
+    email.read = true
     var emails_view = document.querySelector('#emails-view');
     emails_view.innerHTML = `<h3>${email.subject.charAt(0).toUpperCase() + email.subject.slice(1)}</h3><br>`;
+    emails_view.innerHTML = `<button class="btn btn-danger" onclick="load_mailbox('${mailbox}')">Return</button>`;
     emails_view.innerHTML += `<form id="email-form">`;
     let email_form = document.querySelector("#email-form");
     email_form.innerHTML +=  `To: <input disabled id="compose-recipients" class="form-control" value="${email.recipients}">`;
@@ -130,12 +150,11 @@ function open_email(email_id){
     email_form.innerHTML +=  `<input disabled class="form-control" id="compose-subject" value="${email.subject}">`;
     email_form.innerHTML +=  `</div><br>`;
     email_form.innerHTML +=  `<textarea disabled class="form-control" id="compose-body">${email.body}</textarea><br>`;
-    email_form.innerHTML +=  `<button class="btn btn-block btn-danger rounded shadow-sm">Reply</button>`;
+    email_form.innerHTML +=  `<button class="btn btn-block btn-primary rounded shadow-sm">Reply</button>`;
     emails_view.innerHTML += `</form><br>`;
+
+
 })
-    
-
-
 }
 
 
